@@ -48,6 +48,22 @@ def make_LeRobotSingleDataset(
         embodiment_tag = EmbodimentTag.NEW_EMBODIMENT
     
     video_backend = data_cfg.get("video_backend", "decord") if data_cfg else "torchvision_av"
+
+    # Opt-in factory hook: a DataConfig may define ``make_dataset(dataset_name=..., **ds_kwargs)``
+    # to swap in a custom dataset class (e.g. with per-task filtering / chunk stride).
+    # When absent, fall through to the default LeRobotSingleDataset construction below.
+    if hasattr(data_config, "make_dataset"):
+        return data_config.make_dataset(
+            dataset_path=dataset_path,
+            modality_configs=modality_config,
+            transforms=transforms,
+            embodiment_tag=embodiment_tag,
+            video_backend=video_backend,
+            delete_pause_frame=delete_pause_frame,
+            data_cfg=data_cfg,
+            dataset_name=data_name,
+        )
+
     return LeRobotSingleDataset(
         dataset_path=dataset_path,
         modality_configs=modality_config,
