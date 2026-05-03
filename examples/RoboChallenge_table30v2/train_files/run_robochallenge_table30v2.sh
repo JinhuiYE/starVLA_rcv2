@@ -8,8 +8,14 @@ set -euo pipefail
 
 # === Conda setup ===
 if [[ "${CONDA_DEFAULT_ENV:-}" != "starVLA_dev" ]]; then
-  source "$(conda info --base)/etc/profile.d/conda.sh"
-  conda activate starVLA_dev
+  _CONDA_BASE="$(conda info --base 2>/dev/null || echo "${HOME}/.conda")"
+  _CONDA_SH="${_CONDA_BASE}/etc/profile.d/conda.sh"
+  if [[ -f "${_CONDA_SH}" ]]; then
+    source "${_CONDA_SH}"
+    conda activate starVLA_dev
+  else
+    echo "[WARN] conda.sh not found at ${_CONDA_SH}, skipping conda activate"
+  fi
 fi
 
 # === CUDA setup — try common system paths first, then fall back to a stub wrapper ===
@@ -61,7 +67,7 @@ attn_implementation=${ATTN_IMPLEMENTATION:-flash_attention_2}
 
 # --- data ---
 data_root=./playground/Datasets/RoboChallenge_table30v2
-data_mix=robochallenge_table30v2_aloha_all
+data_mix=robochallenge_table30v2_all
 # Available mixtures (edit data_mix above to switch):
 #   robochallenge_table30v2_ur5_all
 #   robochallenge_table30v2_arx5_all
@@ -71,7 +77,7 @@ data_mix=robochallenge_table30v2_aloha_all
 #   robochallenge_table30v2_shred_paper  (single-task walk-through)
 
 # --- training ---
-BATCH=${BATCH:-2}
+BATCH=${BATCH:-16}
 MAX_STEPS=${MAX_STEPS:-100000}
 SAVE_EVERY=${SAVE_EVERY:-50}
 EVAL_EVERY=${EVAL_EVERY:-10}

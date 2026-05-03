@@ -35,7 +35,10 @@ class _RoboChallengeUR5Config:
     language_keys = ["annotation.human.task_description"]
 
     observation_indices = [0]
-    action_indices = list(range(1,50)) # 查看转lerobot 时候， action raw 的 timeslot 是怎么处理的
+    stride = 1
+    action_indices = list(range(1, (50*stride) + 1, stride)) # stride 用来调整 fps / stride
+    # 1 开始是因为查看转 lerobot 时候， action raw 的 timeslot 是 state + 1
+    
     state_indices = [0]
 
     def modality_config(self):
@@ -47,16 +50,21 @@ class _RoboChallengeUR5Config:
         }
 
     def transform(self):
+        # apply_to must be deduplicated: StateActionToTensor processes keys by list order
+        # and would fail on the 2nd occurrence of the same key (already a Tensor).
+        # modality_keys in modality_config() keeps duplicates intentionally so that
+        # _pack_sample concatenates them to reach 16-dim (aligned with ALOHA).
+        unique_action_keys = list(dict.fromkeys(self.action_keys))
         return ComposedModalityTransform(transforms=[
             StateActionToTensor(apply_to=self.state_keys),
             StateActionTransform(
                 apply_to=self.state_keys,
                 normalization_modes={k: "q99" for k in self.state_keys},
             ),
-            StateActionToTensor(apply_to=self.action_keys),
+            StateActionToTensor(apply_to=unique_action_keys),
             StateActionTransform(
-                apply_to=self.action_keys,
-                normalization_modes={k: "q99" for k in self.action_keys},
+                apply_to=unique_action_keys,
+                normalization_modes={k: "q99" for k in unique_action_keys},
             ),
         ])
 
@@ -103,8 +111,8 @@ class _RoboChallengeAlohaConfig:
     language_keys = ["annotation.human.task_description"]
 
     observation_indices = [0]
-    stride = 4
-    action_indices = list(range(0, 50*stride, stride))
+    stride = 1
+    action_indices = list(range(1, (50*stride) + 1, stride)) # stride 用来调整 fps / stride
     state_indices = [0]
 
     def modality_config(self):
