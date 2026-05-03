@@ -4,6 +4,7 @@
 # Modified by [Jinhui YE/ HKUST University] in [2025]. 
 # Modification: [suport topdowm processing, suport param from config].
 
+import logging
 from pathlib import Path
 from typing import Sequence
 from omegaconf import OmegaConf
@@ -14,6 +15,8 @@ from starVLA.dataloader.gr00t_lerobot.registry import (
     DATASET_NAMED_MIXTURES,
     EmbodimentTag,
 )
+
+logger = logging.getLogger(__name__)
 
 def collate_fn(batch):
     return batch
@@ -70,6 +73,7 @@ def get_vla_dataset(
     data_mix = data_cfg.data_mix
     delete_pause_frame = data_cfg.get("delete_pause_frame", False)
     mixture_spec = DATASET_NAMED_MIXTURES[data_mix]
+    logger.info(f"[dataloader] Using mixture '{data_mix}': {[(d, w, r) for d, w, r in mixture_spec]}")
     included_datasets, filtered_mixture_spec = set(), []
     for d_name, d_weight, robot_type in mixture_spec:  
         dataset_key = (d_name, robot_type)  
@@ -101,8 +105,10 @@ if __name__ == "__main__":
     import os
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_yaml", type=str, default="examples/LIBERO/train_files/starvla_cotrain_libero.yaml", help="Path to YAML config")
-    args, clipargs = parser.parse_known_args()
+    parser.add_argument("--config_yaml", type=str, default="examples/RoboChallenge_table30v2/train_files/starvla_qwenoft_robochallenge_table30v2.yaml", help="Path to YAML config")
+    parser.add_argument("--data_mix", type=str, default=None, help="Override data_mix from config")
+    parser.add_argument("--data_root_dir", type=str, default=None, help="Override data_root_dir from config")
+    args = parser.parse_args()
 
     if os.getenv("DEBUGPY_ENABLE", "0") == "1":
         import debugpy
@@ -112,10 +118,13 @@ if __name__ == "__main__":
 
     cfg = OmegaConf.load(args.config_yaml)
     vla_dataset_cfg = cfg.datasets.vla_data
-    for task_id in ["all"]:
-        vla_dataset_cfg.task_id = task_id
-        print(f"Testing Task ID: {task_id}")
-        dataset = get_vla_dataset(data_cfg=vla_dataset_cfg)
+    vla_dataset_cfg.data_root_dir = Path(vla_dataset_cfg.data_root_dir)
+    if args.data_mix is not None:
+        vla_dataset_cfg.data_mix = args.data_mix
+    if args.data_root_dir is not None:
+        vla_dataset_cfg.data_root_dir = Path(args.data_root_dir)
+
+    dataset = get_vla_dataset(data_cfg=vla_dataset_cfg)
     from torch.utils.data import DataLoader
     train_dataloader = DataLoader(
         dataset,

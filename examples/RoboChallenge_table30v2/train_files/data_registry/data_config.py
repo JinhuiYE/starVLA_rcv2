@@ -23,15 +23,19 @@ from starVLA.dataloader.gr00t_lerobot.embodiment_tags import EmbodimentTag
 
 
 class _RoboChallengeUR5Config:
-    """RoboChallenge Table30v2 — UR5 single-arm (2 cameras: cam_global, cam_arm)."""
+    """RoboChallenge Table30v2 — UR5 single-arm (2 cameras: cam_global, cam_arm).
+    Schema (see converter):
+        observation.state  (7,) = joint_positions(6) + gripper_width(1)
+        action             (8,) = ee_positions(7 quat: tx,ty,tz,rx,ry,rz,rw) + gripper_width(1)
+    """
     embodiment_tag = EmbodimentTag.UR5
     video_keys = ["video.cam_global", "video.cam_arm"]
-    state_keys = ["state.joint_positions", "state.gripper_width"]
-    action_keys = ["action.ee_positions", "action.gripper_width"]
+    state_keys = ["state.joint_positions", "state.gripper_width"] 
+    action_keys = ["action.ee_positions", "action.gripper_width", "action.ee_positions", "action.gripper_width"] # @JinhuiYE 通过padding 快速对齐到 统一维度
     language_keys = ["annotation.human.task_description"]
 
     observation_indices = [0]
-    action_indices = list(range(1,50))
+    action_indices = list(range(1,50)) # 查看转lerobot 时候， action raw 的 timeslot 是怎么处理的
     state_indices = [0]
 
     def modality_config(self):
@@ -58,12 +62,24 @@ class _RoboChallengeUR5Config:
 
 
 class _RoboChallengeARX5Config(_RoboChallengeUR5Config):
-    """ARX5 single-arm (3 cameras: cam_global, cam_arm, cam_side)."""
+    """ARX5 single-arm (3 cameras: cam_global, cam_arm, cam_side).
+
+    Schema (see converter):
+        observation.state  (7,) = joint_positions(6) + gripper_width(1)
+        action             (8,) = ee_positions(7 quat: tx,ty,tz,rx,ry,rz,rw) + gripper_width(1)
+    """
+    embodiment_tag = EmbodimentTag.ARX5
     video_keys = ["video.cam_global", "video.cam_arm", "video.cam_side"]
 
 
 class _RoboChallengeDOSW1Config(_RoboChallengeUR5Config):
-    """DOS-W1 single-arm (3 cameras: cam_high, cam_left_wrist, cam_right_wrist)."""
+    """DOS-W1 single-arm (3 cameras: cam_high, cam_left_wrist, cam_right_wrist).
+
+    Schema (see converter):
+        observation.state  (7,) = joint_positions(6) + gripper_width(1)
+        action             (8,) = ee_positions(7 quat: tx,ty,tz,rx,ry,rz,rw) + gripper_width(1)
+    """
+    embodiment_tag = EmbodimentTag.DOS_W1
     video_keys = ["video.cam_high", "video.cam_left_wrist", "video.cam_right_wrist"]
 
 
@@ -147,7 +163,7 @@ DATASET_NAMED_MIXTURES = {
     ],
     # --- DOS-W1 single-arm ---
     "robochallenge_table30v2_dosw1_all": [
-        ("lerobot/fold_the_clothes",                1.0, "dosw1_robochallenge"),
+        # ("lerobot/fold_the_clothes",                1.0, "dosw1_robochallenge"),
         ("lerobot/hold_the_tray_with_both_hands",   1.0, "dosw1_robochallenge"),
         ("lerobot/place_objects_into_desk_drawer",  1.0, "dosw1_robochallenge"),
         ("lerobot/put_in_pen_container",            1.0, "dosw1_robochallenge"),
@@ -171,4 +187,21 @@ DATASET_NAMED_MIXTURES = {
         ("lerobot/wipe_the_blackboard",                     1.0, "aloha_robochallenge"),
         ("lerobot/wrap_with_a_soft_cloth",                  1.0, "aloha_robochallenge"),
     ],
+
+    
+
+
 }
+
+
+# --- all tasks combined (ur5 + arx5 + dosw1 + aloha) ---
+DATASET_NAMED_MIXTURES["robochallenge_table30v2_all"] = [
+    entry
+    for key in [
+        "robochallenge_table30v2_ur5_all",
+        "robochallenge_table30v2_arx5_all",
+        # "robochallenge_table30v2_dosw1_all",
+        "robochallenge_table30v2_aloha_all",
+    ]
+    for entry in DATASET_NAMED_MIXTURES[key]
+]  
