@@ -147,20 +147,20 @@ ROBOT_TYPE_CONFIG_MAP = {
 
 DATASET_NAMED_MIXTURES = {
     # --- minimal walk-through (1 task) ---
-    "robochallenge_table30v2_shred_paper": [
+    "rc2_shred_paper": [
         ("lerobot/shred_paper", 1.0, "ur5_robochallenge"),
     ],
-    "robochallenge_table30v2_lint_roller": [
+    "rc2_lint_roller": [
         ("lerobot/lint_roller_remove_dirt", 1.0, "aloha_robochallenge"),
     ],
     # --- UR5 single-arm ---
-    "robochallenge_table30v2_ur5_all": [
+    "rc2_ur5_all": [
         ("lerobot/arrange_fruits",      1.0, "ur5_robochallenge"),
         ("lerobot/item_classification", 1.0, "ur5_robochallenge"),
         ("lerobot/shred_paper",         1.0, "ur5_robochallenge"),
     ],
     # --- ARX5 single-arm ---
-    "robochallenge_table30v2_arx5_all": [
+    "rc2_arx5_all": [
         ("lerobot/arrange_flowers",              1.0, "arx5_robochallenge"),
         ("lerobot/hang_the_cup",                 1.0, "arx5_robochallenge"),
         ("lerobot/pick_out_the_green_blocks",    1.0, "arx5_robochallenge"),
@@ -170,7 +170,7 @@ DATASET_NAMED_MIXTURES = {
         ("lerobot/wipe_the_table",               1.0, "arx5_robochallenge"),
     ],
     # --- DOS-W1 single-arm ---
-    "robochallenge_table30v2_dosw1_all": [
+    "rc2_dosw1_all": [
         # ("lerobot/fold_the_clothes",                1.0, "dosw1_robochallenge"),
         ("lerobot/hold_the_tray_with_both_hands",   1.0, "dosw1_robochallenge"),
         ("lerobot/place_objects_into_desk_drawer",  1.0, "dosw1_robochallenge"),
@@ -183,7 +183,11 @@ DATASET_NAMED_MIXTURES = {
         ("lerobot/untie_the_shoelaces",             1.0, "dosw1_robochallenge"),
     ],
     # --- ALOHA bimanual ---
-    "robochallenge_table30v2_aloha_all": [
+    "rc2_aloha_one": [
+        ("lerobot/lint_roller_remove_dirt",                 1.0, "aloha_robochallenge"),
+    ],
+    # --- ALOHA bimanual ---
+    "rc2_aloha_all": [
         ("lerobot/lint_roller_remove_dirt",                 1.0, "aloha_robochallenge"),
         ("lerobot/pack_the_items",                          1.0, "aloha_robochallenge"),
         ("lerobot/pack_the_toothbrush_holder",              1.0, "aloha_robochallenge"),
@@ -203,13 +207,13 @@ DATASET_NAMED_MIXTURES = {
 
 
 # --- all tasks combined (ur5 + arx5 + dosw1 + aloha) ---
-DATASET_NAMED_MIXTURES["robochallenge_table30v2_all"] = [
+DATASET_NAMED_MIXTURES["rc2_all"] = [
     entry
     for key in [
-        "robochallenge_table30v2_ur5_all",
-        "robochallenge_table30v2_arx5_all",
-        # "robochallenge_table30v2_dosw1_all",
-        "robochallenge_table30v2_aloha_all",
+        "rc2_ur5_all",
+        "rc2_arx5_all",
+        # "rc2_dosw1_all",
+        "rc2_aloha_all",
     ]
     for entry in DATASET_NAMED_MIXTURES[key]
 ]  

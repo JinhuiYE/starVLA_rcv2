@@ -1,4 +1,4 @@
-run_id: starvla_qwenoft_robochallenge_table30v2_shred_paper
+run_id: starvla_qwenoft_rc2_shred_paper
 run_root_dir: results/Checkpoints
 seed: 42
 wandb_entity: your_wandb_entity
@@ -24,7 +24,7 @@ datasets:
     dataset_py: lerobot_datasets
     include_state: false
     data_root_dir: playground/Datasets/RoboChallenge_table30v2
-    data_mix: robochallenge_table30v2_aloha_all
+    data_mix: rc2_aloha_all
     action_type: abs_ee # 这个是不作用的
     sequential_step_sampling: false
     per_device_batch_size: 2

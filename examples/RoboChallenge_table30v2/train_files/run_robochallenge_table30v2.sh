@@ -61,26 +61,26 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 cd /home/jye624/Projcets/starVLA
 
 # --- model ---
-Framework_name=QwenPI_v4
+Framework_name=QwenOFT
 base_vlm=playground/Pretrained_models/Qwen3.5-0.8B
 attn_implementation=${ATTN_IMPLEMENTATION:-flash_attention_2}
 
 # --- data ---
 data_root=./playground/Datasets/RoboChallenge_table30v2
-data_mix=robochallenge_table30v2_all
+data_mix=rc2_aloha_one
 # Available mixtures (edit data_mix above to switch):
-#   robochallenge_table30v2_ur5_all
-#   robochallenge_table30v2_arx5_all
-#   robochallenge_table30v2_dosw1_all
-#   robochallenge_table30v2_aloha_all
-#   robochallenge_table30v2_all          (all embodiments combined)
-#   robochallenge_table30v2_shred_paper  (single-task walk-through)
+#   rc2_ur5_all
+#   rc2_arx5_all
+#   rc2_dosw1_all
+#   rc2_aloha_all
+#   rc2_all          (all embodiments combined)
+#   rc2_aloha_one  (single-task walk-through)
 
 # --- training ---
 BATCH=${BATCH:-16}
-MAX_STEPS=${MAX_STEPS:-100000}
-SAVE_EVERY=${SAVE_EVERY:-50}
-EVAL_EVERY=${EVAL_EVERY:-10}
+MAX_STEPS=${MAX_STEPS:-130000}
+SAVE_EVERY=${SAVE_EVERY:-10000}
+EVAL_EVERY=${EVAL_EVERY:-1000}
 LOG_EVERY=${LOG_EVERY:-100}
 freeze_module_list=''
 
@@ -91,9 +91,9 @@ run_id=$(date +%m%d)_${data_mix}_${Framework_name}
 # === End of environment-specific configuration ===
 ###########################################################################################
 
-export WANDB_MODE=${WANDB_MODE:-disabled}
+# export WANDB_MODE=${WANDB_MODE:-disabled}
 export WANDB_API_KEY=${WANDB_API_KEY:-}
-export MAIN_PROCESS_PORT=${MAIN_PROCESS_PORT:-29502}
+export MAIN_PROCESS_PORT=${MAIN_PROCESS_PORT:-29506}
 
 output_dir=${run_root_dir}/${run_id}
 mkdir -p "${output_dir}"
