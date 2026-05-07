@@ -132,14 +132,14 @@ def discover_and_merge() -> None:
             if mod:
                 if hasattr(mod, "ROBOT_TYPE_CONFIG_MAP"):
                     ROBOT_TYPE_CONFIG_MAP.update(mod.ROBOT_TYPE_CONFIG_MAP)
-                    logger.info(f"[registry] Loaded data_config from {bench_name}: {list(mod.ROBOT_TYPE_CONFIG_MAP.keys())}")
+                    logger.debug(f"[registry] Loaded data_config from {bench_name}: {list(mod.ROBOT_TYPE_CONFIG_MAP.keys())}")
                 # Legacy: bench file may still expose an explicit dict override.
                 if hasattr(mod, "ROBOT_TYPE_TO_EMBODIMENT_TAG"):
                     _LEGACY_TAG_OVERRIDES.update(mod.ROBOT_TYPE_TO_EMBODIMENT_TAG)
-                    logger.info(f"[registry] Legacy embodiment_tag overrides from {bench_name}: {list(mod.ROBOT_TYPE_TO_EMBODIMENT_TAG.keys())}")
+                    logger.debug(f"[registry] Legacy embodiment_tag overrides from {bench_name}: {list(mod.ROBOT_TYPE_TO_EMBODIMENT_TAG.keys())}")
                 if hasattr(mod, "DATASET_NAMED_MIXTURES"):
                     DATASET_NAMED_MIXTURES.update(mod.DATASET_NAMED_MIXTURES)
-                    logger.info(f"[registry] Loaded mixtures from {bench_name} (data_config): {list(mod.DATASET_NAMED_MIXTURES.keys())}")
+                    logger.debug(f"[registry] Loaded mixtures from {bench_name} (data_config): {list(mod.DATASET_NAMED_MIXTURES.keys())}")
 
     # Re-derive after all benches are loaded so classvars + legacy overrides combine.
     ROBOT_TYPE_TO_EMBODIMENT_TAG = _derive_tag_map()

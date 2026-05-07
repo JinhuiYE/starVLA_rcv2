@@ -131,13 +131,13 @@ class ModelClient:
             "lang": self.task_description,
         }
 
-        vla_input = {
-            "examples": [example],
-            "do_sample": False,
-            "cfg_scale": self.cfg_scale,
-            "use_ddim": self.use_ddim,
-            "num_ddim_steps": self.num_ddim_steps,
-        }
+        # vla_input = {
+        #     "examples": [example],
+        #     "do_sample": False,
+        #     "cfg_scale": self.cfg_scale,
+        #     "use_ddim": self.use_ddim,
+        #     "num_ddim_steps": self.num_ddim_steps,
+        # }
 
         vla_input = {
             "examples": [example],

@@ -23,15 +23,22 @@ from starVLA.dataloader.gr00t_lerobot.embodiment_tags import EmbodimentTag
 
 
 class _RoboChallengeUR5Config:
-    """RoboChallenge Table30v2 — UR5 single-arm (2 cameras: cam_global, cam_arm)."""
+    """RoboChallenge Table30v2 — UR5 single-arm (2 cameras: cam_global, cam_arm).
+    Schema (see converter):
+        observation.state  (7,) = joint_positions(6) + gripper_width(1)
+        action             (8,) = ee_positions(7 quat: tx,ty,tz,rx,ry,rz,rw) + gripper_width(1)
+    """
     embodiment_tag = EmbodimentTag.UR5
     video_keys = ["video.cam_global", "video.cam_arm"]
-    state_keys = ["state.joint_positions", "state.gripper_width"]
-    action_keys = ["action.ee_positions", "action.gripper_width"]
+    state_keys = ["state.joint_positions", "state.gripper_width"] 
+    action_keys = ["action.ee_positions", "action.gripper_width", "action.ee_positions", "action.gripper_width"] # @JinhuiYE 通过padding 快速对齐到 统一维度
     language_keys = ["annotation.human.task_description"]
 
     observation_indices = [0]
-    action_indices = list(range(1,50))
+    stride = 1
+    action_indices = list(range(1, (50*stride) + 1, stride)) # stride 用来调整 fps / stride
+    # 1 开始是因为查看转 lerobot 时候， action raw 的 timeslot 是 state + 1
+    
     state_indices = [0]
 
     def modality_config(self):
@@ -43,27 +50,44 @@ class _RoboChallengeUR5Config:
         }
 
     def transform(self):
+        # apply_to must be deduplicated: StateActionToTensor processes keys by list order
+        # and would fail on the 2nd occurrence of the same key (already a Tensor).
+        # modality_keys in modality_config() keeps duplicates intentionally so that
+        # _pack_sample concatenates them to reach 16-dim (aligned with ALOHA).
+        unique_action_keys = list(dict.fromkeys(self.action_keys))
         return ComposedModalityTransform(transforms=[
             StateActionToTensor(apply_to=self.state_keys),
             StateActionTransform(
                 apply_to=self.state_keys,
                 normalization_modes={k: "q99" for k in self.state_keys},
             ),
-            StateActionToTensor(apply_to=self.action_keys),
+            StateActionToTensor(apply_to=unique_action_keys),
             StateActionTransform(
-                apply_to=self.action_keys,
-                normalization_modes={k: "q99" for k in self.action_keys},
+                apply_to=unique_action_keys,
+                normalization_modes={k: "q99" for k in unique_action_keys},
             ),
         ])
 
 
 class _RoboChallengeARX5Config(_RoboChallengeUR5Config):
-    """ARX5 single-arm (3 cameras: cam_global, cam_arm, cam_side)."""
+    """ARX5 single-arm (3 cameras: cam_global, cam_arm, cam_side).
+
+    Schema (see converter):
+        observation.state  (7,) = joint_positions(6) + gripper_width(1)
+        action             (8,) = ee_positions(7 quat: tx,ty,tz,rx,ry,rz,rw) + gripper_width(1)
+    """
+    embodiment_tag = EmbodimentTag.ARX5
     video_keys = ["video.cam_global", "video.cam_arm", "video.cam_side"]
 
 
 class _RoboChallengeDOSW1Config(_RoboChallengeUR5Config):
-    """DOS-W1 single-arm (3 cameras: cam_high, cam_left_wrist, cam_right_wrist)."""
+    """DOS-W1 single-arm (3 cameras: cam_high, cam_left_wrist, cam_right_wrist).
+
+    Schema (see converter):
+        observation.state  (7,) = joint_positions(6) + gripper_width(1)
+        action             (8,) = ee_positions(7 quat: tx,ty,tz,rx,ry,rz,rw) + gripper_width(1)
+    """
+    embodiment_tag = EmbodimentTag.DOS_W1
     video_keys = ["video.cam_high", "video.cam_left_wrist", "video.cam_right_wrist"]
 
 
@@ -87,8 +111,8 @@ class _RoboChallengeAlohaConfig:
     language_keys = ["annotation.human.task_description"]
 
     observation_indices = [0]
-    stride = 4
-    action_indices = list(range(0, 50*stride, stride))
+    stride = 1
+    action_indices = list(range(1, (50*stride) + 1, stride)) # stride 用来调整 fps / stride
     state_indices = [0]
 
     def modality_config(self):
@@ -123,20 +147,20 @@ ROBOT_TYPE_CONFIG_MAP = {
 
 DATASET_NAMED_MIXTURES = {
     # --- minimal walk-through (1 task) ---
-    "robochallenge_table30v2_shred_paper": [
+    "rc2_shred_paper": [
         ("lerobot/shred_paper", 1.0, "ur5_robochallenge"),
     ],
-    "robochallenge_table30v2_lint_roller": [
+    "rc2_lint_roller": [
         ("lerobot/lint_roller_remove_dirt", 1.0, "aloha_robochallenge"),
     ],
     # --- UR5 single-arm ---
-    "robochallenge_table30v2_ur5_all": [
+    "rc2_ur5_all": [
         ("lerobot/arrange_fruits",      1.0, "ur5_robochallenge"),
         ("lerobot/item_classification", 1.0, "ur5_robochallenge"),
         ("lerobot/shred_paper",         1.0, "ur5_robochallenge"),
     ],
     # --- ARX5 single-arm ---
-    "robochallenge_table30v2_arx5_all": [
+    "rc2_arx5_all": [
         ("lerobot/arrange_flowers",              1.0, "arx5_robochallenge"),
         ("lerobot/hang_the_cup",                 1.0, "arx5_robochallenge"),
         ("lerobot/pick_out_the_green_blocks",    1.0, "arx5_robochallenge"),
@@ -146,8 +170,8 @@ DATASET_NAMED_MIXTURES = {
         ("lerobot/wipe_the_table",               1.0, "arx5_robochallenge"),
     ],
     # --- DOS-W1 single-arm ---
-    "robochallenge_table30v2_dosw1_all": [
-        ("lerobot/fold_the_clothes",                1.0, "dosw1_robochallenge"),
+    "rc2_dosw1_all": [
+        # ("lerobot/fold_the_clothes",                1.0, "dosw1_robochallenge"),
         ("lerobot/hold_the_tray_with_both_hands",   1.0, "dosw1_robochallenge"),
         ("lerobot/place_objects_into_desk_drawer",  1.0, "dosw1_robochallenge"),
         ("lerobot/put_in_pen_container",            1.0, "dosw1_robochallenge"),
@@ -159,7 +183,11 @@ DATASET_NAMED_MIXTURES = {
         ("lerobot/untie_the_shoelaces",             1.0, "dosw1_robochallenge"),
     ],
     # --- ALOHA bimanual ---
-    "robochallenge_table30v2_aloha_all": [
+    "rc2_aloha_one": [
+        ("lerobot/lint_roller_remove_dirt",                 1.0, "aloha_robochallenge"),
+    ],
+    # --- ALOHA bimanual ---
+    "rc2_aloha_all": [
         ("lerobot/lint_roller_remove_dirt",                 1.0, "aloha_robochallenge"),
         ("lerobot/pack_the_items",                          1.0, "aloha_robochallenge"),
         ("lerobot/pack_the_toothbrush_holder",              1.0, "aloha_robochallenge"),
@@ -171,4 +199,21 @@ DATASET_NAMED_MIXTURES = {
         ("lerobot/wipe_the_blackboard",                     1.0, "aloha_robochallenge"),
         ("lerobot/wrap_with_a_soft_cloth",                  1.0, "aloha_robochallenge"),
     ],
+
+    
+
+
 }
+
+
+# --- all tasks combined (ur5 + arx5 + dosw1 + aloha) ---
+DATASET_NAMED_MIXTURES["rc2_all"] = [
+    entry
+    for key in [
+        "rc2_ur5_all",
+        "rc2_arx5_all",
+        # "rc2_dosw1_all",
+        "rc2_aloha_all",
+    ]
+    for entry in DATASET_NAMED_MIXTURES[key]
+]  
